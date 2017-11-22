@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>Force Layout with labels on edges</title>
-<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 <script
   src="https://code.jquery.com/jquery-3.2.1.min.js"
   integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
@@ -35,7 +35,7 @@ var dataset = {
 
 var retrieve = function(id, collection){
   //const sparqlEndpoint = "http://localhost:3030/ds/query"
-  const sparqlEndpoint = "http://sparql-staging.scta.info/ds/query"
+  const sparqlEndpoint = "https://sparql-staging.scta.info/ds/query"
 
   var collectionQuery = [
     "select ?target ",
