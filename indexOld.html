@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Force Layout with labels on edges</title>
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+
+<style type="text/css">
+.highlighted {
+  stroke: blue !important;
+  fill: red !important;
+}
+
+</style>
+</head>
+<body>
+  <p>Filter <button class="toggle-filter" data-type="order">Order</button> <button class="toggle-filter" data-type="date">Date</button></p>
+
+<script type="text/javascript">
+var filter = "date"
+//var filter = "order"
+
+$(document).ready(function(){
+
+  $(".toggle-filter").click(function(){
+     var type = $(this).attr("data-type")
+     filter = type
+   });
+
+});
+
+
+    var w = 1000;
+    var h = 600;
+    var linkDistance=200;
+
+    var colors = d3.scale.category10();
+
+    var dataset = {
+
+    nodes: [
+    {name: "John 1:1"},
+    {name: "Holcot", order: "Dominican", century: "14"},
+    {name: "Plaoul", order: "Secular", date: "14"},
+    {name: "Wodeham", order: "Franciscan", date: "14"},
+    {name: "Pico", order: "Secular", date: "15"},
+    {name: "Aquinas", order: "Dominican", date: "13"},
+    {name: "Scotus", order: "Franciscan", date: "14"},
+    {name: "Ockham", order: "Franciscan", date: "14"},
+    {name: "Holcot", order: "Dominican", date: "14"},
+    {name: "Plaoul", order: "Secular", date: "14"},
+    {name: "Wodeham", order: "Franciscan", date: "14"},
+    {name: "Pico", order: "Secular", date: "15"},
+    {name: "Aquinas", order: "Dominican", date: "13"},
+    {name: "Scotus", order: "Franciscan", date: "14"},
+    {name: "Ockham", order: "Franciscan", date: "14"},
+    {name: "Lombard", order: "Secular", date: "12"},
+    {name: "Holcot", order: "Dominican", century: "14"},
+    {name: "Plaoul", order: "Secular", date: "14"},
+    {name: "Wodeham", order: "Franciscan", date: "14"},
+    {name: "Pico", order: "Secular", date: "15"},
+    {name: "Aquinas", order: "Dominican", date: "13"},
+    {name: "Scotus", order: "Franciscan", date: "14"},
+    {name: "Ockham", order: "Franciscan", date: "14"},
+    {name: "Holcot", order: "Dominican", date: "14"},
+    {name: "Plaoul", order: "Secular", date: "14"},
+    {name: "Wodeham", order: "Franciscan", date: "14"},
+    {name: "Pico", order: "Secular", date: "15"},
+    {name: "Aquinas", order: "Dominican", date: "13"},
+    {name: "Scotus", order: "Franciscan", date: "14"},
+    {name: "Ockham", order: "Franciscan", date: "14"},
+    {name: "Lombard", order: "Secular", date: "12"},
+    {name: "Holcot", order: "Dominican", century: "14"},
+    {name: "Plaoul", order: "Secular", date: "14"},
+    {name: "Wodeham", order: "Franciscan", date: "14"},
+    {name: "Pico", order: "Secular", date: "15"},
+    {name: "Aquinas", order: "Dominican", date: "13"},
+    {name: "Scotus", order: "Franciscan", date: "14"},
+    {name: "Ockham", order: "Franciscan", date: "14"},
+    {name: "Holcot", order: "Dominican", date: "14"},
+    {name: "Plaoul", order: "Secular", date: "14"},
+    {name: "Wodeham", order: "Franciscan", date: "14"},
+    {name: "Pico", order: "Secular", date: "15"},
+    {name: "Aquinas", order: "Dominican", date: "13"},
+    {name: "Scotus", order: "Franciscan", date: "14"},
+    {name: "Ockham", order: "Franciscan", date: "14"},
+    {name: "Lombard", order: "Secular", date: "12"},
+    {name: "Holcot", order: "Dominican", century: "14"},
+    {name: "Plaoul", order: "Secular", date: "14"},
+    {name: "Wodeham", order: "Franciscan", date: "14"},
+    {name: "Pico", order: "Secular", date: "15"},
+    {name: "Aquinas", order: "Dominican", date: "13"},
+    {name: "Scotus", order: "Franciscan", date: "14"},
+    {name: "Ockham", order: "Franciscan", date: "14"},
+    {name: "Holcot", order: "Dominican", date: "14"},
+    {name: "Plaoul", order: "Secular", date: "14"},
+    {name: "Wodeham", order: "Franciscan", date: "14"},
+    {name: "Pico", order: "Secular", date: "15"},
+    {name: "Aquinas", order: "Dominican", date: "13"},
+    {name: "Scotus", order: "Franciscan", date: "14"},
+    {name: "Ockham", order: "Franciscan", date: "14"},
+    {name: "Lombard", order: "Secular", date: "12"}
+
+    ],
+    edges: [
+    {source: 1, target: 0},
+    {source: 2, target: 0},
+    {source: 3, target: 0},
+    {source: 4, target: 0},
+    {source: 5, target: 0},
+    {source: 6, target: 0},
+    {source: 7, target: 0},
+    {source: 8, target: 0},
+    {source: 9, target: 0},
+    {source: 10, target: 0},
+    {source: 11, target: 0},
+    {source: 12, target: 0},
+    {source: 13, target: 0},
+    {source: 14, target: 0},
+    {source: 15, target: 0},
+    {source: 16, target: 0},
+    {source: 17, target: 0},
+    {source: 18, target: 0},
+    {source: 19, target: 0},
+    {source: 20, target: 0},
+    {source: 21, target: 0},
+    {source: 22, target: 0},
+    {source: 23, target: 0},
+    {source: 24, target: 0},
+    {source: 25, target: 0},
+    {source: 26, target: 0},
+    {source: 27, target: 0},
+    {source: 28, target: 0},
+    {source: 29, target: 0},
+    {source: 30, target: 0},
+    {source: 31, target: 0},
+    {source: 32, target: 0},
+    {source: 33, target: 0},
+    {source: 34, target: 0},
+    {source: 35, target: 0},
+    {source: 36, target: 0},
+    {source: 37, target: 0},
+    {source: 38, target: 0},
+    {source: 39, target: 0},
+    {source: 40, target: 0},
+    {source: 41, target: 0},
+    {source: 42, target: 0},
+    {source: 43, target: 0},
+    {source: 44, target: 0},
+    {source: 45, target: 0},
+    {source: 46, target: 0},
+    {source: 47, target: 0},
+    {source: 48, target: 0},
+    {source: 49, target: 0},
+    {source: 50, target: 0},
+    {source: 51, target: 0},
+    {source: 52, target: 0},
+    {source: 53, target: 0},
+    {source: 54, target: 0},
+    {source: 55, target: 0},
+    {source: 56, target: 0},
+    {source: 57, target: 0},
+    {source: 58, target: 0},
+    {source: 59, target: 0},
+    {source: 60, target: 0},
+    ]
+    };
+
+
+    var svg = d3.select("body").append("svg").attr({"width":w,"height":h});
+
+    var force = d3.layout.force()
+        .nodes(dataset.nodes)
+        .links(dataset.edges)
+        .size([w,h])
+        .linkDistance([linkDistance])
+        .charge([-500])
+        .theta(0.1)
+        .gravity(0.05)
+        .start();
+
+
+
+    var edges = svg.selectAll("line")
+      .data(dataset.edges)
+      .enter()
+      .append("line")
+      .attr("id",function(d,i) {return 'edge'+i})
+      .attr("data-source", function(d, i){return d.source.index})
+      .attr("data-order", function(d, i){return d.source.order})
+      .attr("data-date", function(d, i){return d.source.date})
+      .attr('marker-end','url(#arrowhead)')
+      .style("stroke","#ccc")
+      .style("pointer-events", "none");
+
+      var mapMouseOver = function(d){
+        value = ""
+        if (filter === "date") { value = d.date}
+        else if (filter === "order") {value = d.order}
+        else {value = d.order}
+
+        d3.selectAll("circle[data-" + filter + "='" + value + "']")
+          .classed("highlighted", true)
+        d3.selectAll("line[data-" + filter + "='" + value + "']")
+          .classed("highlighted", true)
+        }
+      var mapMouseOut = function(d){
+
+        d3.selectAll("circle")
+          .classed("highlighted", false)
+        d3.selectAll("line")
+          .classed("highlighted", false)
+        }
+
+    var nodes = svg.selectAll("circle")
+      .data(dataset.nodes)
+      .enter()
+      .append("circle")
+      .attr("data-order", function(d, i){return d.order})
+      .attr("data-index", function(d, i){return d.index})
+      .attr("data-date", function(d, i){return d.date})
+      .attr({"r":15})
+      .style("fill", "blue")
+      .call(force.drag)
+      .on("mouseover", mapMouseOver)
+      .on("mouseout", mapMouseOut)
+
+
+
+    var nodelabels = svg.selectAll(".nodelabel")
+       .data(dataset.nodes)
+       .enter()
+       .append("text")
+       .attr({"x":function(d){return d.x;},
+              "y":function(d){return d.y;},
+              "class":"nodelabel",
+              "stroke":"black"})
+       .text(function(d){return d.name;});
+
+
+
+    var edgepaths = svg.selectAll(".edgepath")
+        .data(dataset.edges)
+        .enter()
+        .append('path')
+        .attr({'d': function(d) {return 'M '+d.source.x+' '+d.source.y+' L '+ d.target.x +' '+d.target.y},
+               'class':'edgepath',
+               'fill-opacity':0,
+               'stroke-opacity':0,
+               'fill':'blue',
+               'stroke':'red',
+               'id':function(d,i) {return 'edgepath'+i}})
+        .style("pointer-events", "none");
+
+    var edgelabels = svg.selectAll(".edgelabel")
+        .data(dataset.edges)
+        .enter()
+        .append('text')
+        .style("pointer-events", "none")
+        .attr({'class':'edgelabel',
+               'id':function(d,i){return 'edgelabel'+i},
+               'dx':80,
+               'dy':0,
+               'font-size':10,
+               'fill':'#aaa'});
+
+    edgelabels.append('textPath')
+        .attr('xlink:href',function(d,i) {return '#edgepath'+i})
+        .style("pointer-events", "none")
+        .text(function(d,i){return 'label '+i});
+
+
+    svg.append('defs').append('marker')
+        .attr({'id':'arrowhead',
+               'viewBox':'-0 -5 10 10',
+               'refX':25,
+               'refY':0,
+               //'markerUnits':'strokeWidth',
+               'orient':'auto',
+               'markerWidth':10,
+               'markerHeight':10,
+               'xoverflow':'visible'})
+        .append('svg:path')
+            .attr('d', 'M 0,-5 L 10 ,0 L 0,5')
+            .attr('fill', '#ccc')
+            .attr('stroke','#ccc');
+
+
+    force.on("tick", function(){
+
+        edges.attr({"x1": function(d){return d.source.x;},
+                    "y1": function(d){return d.source.y;},
+                    "x2": function(d){return d.target.x;},
+                    "y2": function(d){return d.target.y;}
+        });
+
+        nodes.attr({"cx":function(d){return d.x;},
+                    "cy":function(d){return d.y;}
+        });
+
+        nodelabels.attr("x", function(d) { return d.x; })
+                  .attr("y", function(d) { return d.y; });
+
+        edgepaths.attr('d', function(d) { var path='M '+d.source.x+' '+d.source.y+' L '+ d.target.x +' '+d.target.y;
+                                           //console.log(d)
+                                           return path});
+
+        edgelabels.attr('transform',function(d,i){
+            if (d.target.x<d.source.x){
+                bbox = this.getBBox();
+                rx = bbox.x+bbox.width/2;
+                ry = bbox.y+bbox.height/2;
+                return 'rotate(180 '+rx+' '+ry+')';
+                }
+            else {
+                return 'rotate(0)';
+                }
+        });
+    });
+
+</script>
+
+</body>
+</html>
