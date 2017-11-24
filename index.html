@@ -18,11 +18,16 @@
 </style>
 </head>
 <body>
+  <div id="list" style="float:left">
+  </div>
+  <div id="network" style="float:left">
 <form id="start">
   <input id="inputValue" type="text" value="http://scta.info/resource/pll1d1c1-vanspv"/>
   <label>Collection</label><input id="collection" type="checkbox"/>
   <input type="submit"/>
 </form>
+</div>
+
 <script type="text/javascript">
 
 var dataset = {
@@ -38,7 +43,7 @@ var retrieve = function(id, collection){
   const sparqlEndpoint = "https://sparql-staging.scta.info/ds/query"
 
   var collectionQuery = [
-    "select ?target ",
+    "select ?target ?title ?topLevel ?topLevelTitle ",
     "WHERE",
     "{",
     "?item <http://scta.info/property/isMemberOf> <" + id + "> .",
@@ -61,12 +66,23 @@ var retrieve = function(id, collection){
       "{",
         "?item <http://scta.info/property/isRelatedTo> ?target .",
       "}",
+      "?target <http://purl.org/dc/elements/1.1/title> ?title .",
+        "{",
+          "?target <http://scta.info/property/isPartOfTopLevelExpression> ?topLevel .",
+          "?topLevel <http://purl.org/dc/elements/1.1/title> ?topLevelTitle .",
+        "}",
+        "UNION",
+        "{",
+          "?target <http://scta.info/property/source> ?source .",
+          "?source <http://scta.info/property/isPartOfTopLevelExpression> ?topLevel .",
+          "?topLevel <http://purl.org/dc/elements/1.1/title> ?topLevelTitle .",
+        "}",
     "}",
     "LIMIT 50"].join('');
 
 
   var itemQuery = [
-    "select ?target ",
+    "select ?target ?title ?topLevel ?topLevelTitle ",
     "WHERE",
     "{",
       "{",
@@ -88,17 +104,24 @@ var retrieve = function(id, collection){
       "{",
         "<" + id + "> <http://scta.info/property/isRelatedTo> ?target .",
       "}",
+      "?target <http://purl.org/dc/elements/1.1/title> ?title .",
+        "{",
+          "?target <http://scta.info/property/isPartOfTopLevelExpression> ?topLevel .",
+          "?topLevel <http://purl.org/dc/elements/1.1/title> ?topLevelTitle .",
+        "}",
+        "UNION",
+        "{",
+          "?target <http://scta.info/property/source> ?source .",
+          "?source <http://scta.info/property/isPartOfTopLevelExpression> ?topLevel .",
+          "?topLevel <http://purl.org/dc/elements/1.1/title> ?topLevelTitle .",
+        "}",
     "}"].join('');
-    console.log(itemQuery);
-    console.log("value2", collection);
     var query = collection ? collectionQuery : query = itemQuery;
 
     $.get(sparqlEndpoint, {query: query}, function(data){
-      console.log(data);
       var results = data.results.bindings;
-      var nodes = results.map(function(n){return n.target.value; })
-      console.log("nodes", nodes);
-      addNode(id, nodes);
+      console.log(results);
+      addNode(id, results);
     });
   }
   //var id = "http://scta.info/resource/pgb1q8-d1e747"
@@ -113,11 +136,22 @@ var retrieve = function(id, collection){
 
     var addNode = function(source, nodes){
       if (!checkIfNodeAlreadyExists(dataset.nodes, source)){
-        dataset.nodes.push({name: source});
+        dataset.nodes.push(
+          {
+            name: source,
+            title: "start",
+            topLevel: "start",
+            topLevelTitle: "start"
+        });
       }
       for (i = 0; i < nodes.length; i++) {
-        if (!checkIfNodeAlreadyExists(dataset.nodes, nodes[i])){
-          dataset.nodes.push({name: nodes[i]});
+        if (!checkIfNodeAlreadyExists(dataset.nodes, nodes[i].target.value)){
+          dataset.nodes.push(
+            {name: nodes[i].target.value,
+              title: nodes[i].title.value,
+              topLevel: nodes[i].topLevel.value,
+              topLevelTitle: nodes[i].topLevelTitle.value
+            });
         }
       }
 
@@ -126,14 +160,16 @@ var retrieve = function(id, collection){
 
       sourceIndex =  findWithAttr(dataset.nodes, "name", source)
       for (i = 0; i < nodes.length; i++) {
-        var targetIndex = findWithAttr(dataset.nodes, "name", nodes[i])
+        var targetIndex = findWithAttr(dataset.nodes, "name", nodes[i].target.value)
         if (!checkIfEdgeAlreadyExists(dataset.edges, sourceIndex, targetIndex)){
           addEdge(sourceIndex, targetIndex);
         }
       }
       console.log(dataset.edges)
-      d3.select("svg").remove();
+      d3.select("#list").select("svg").remove();
+      d3.select("#network").select("svg").remove();
       draw(dataset);
+      list(dataset);
     }
 
     var checkIfEdgeAlreadyExists = function(nodes, sourceIndex, targetIndex){
@@ -166,13 +202,47 @@ var retrieve = function(id, collection){
         return -1;
     }
 
+    var list = function(dataset){
+
+      var nestedData = d3.nest()
+        .key(function(d) { return d.topLevel; })
+        .entries(dataset.nodes)
+
+      console.log("nestedData", nestedData);
+      var w = 200;
+      var h = 800;
+      var colors = d3.scale.category10();
+      var svg = d3.select("#list").append("svg").attr({"width":w,"height":h, "padding": 30});
+      var nodes = svg.selectAll("circle")
+        .data(nestedData)
+        .enter()
+        .append("circle")
+        .attr("data-id", function(d, i){return d.name})
+        .attr("class", "nodelist")
+        .attr({"r":10})
+        .attr('cx', 50)
+        .attr('cy', function(d, i) {return 100 + (32*i)} )
+        .attr('fill', function(d, i) {
+          return colors(d.key);
+        })
+      var nodelabels = svg.selectAll(".nodelistlabel")
+         .data(nestedData)
+         .enter()
+         .append("text")
+         .attr({"x":function(d, i){return 60;},
+                "y":function(d, i){return 100 + (32*i)},
+                "class":"nodelistlabel",
+                "stroke":"black"})
+         .text(function(d){return d.values[0].topLevelTitle;});
+    }
+
     var draw = function(dataset){
       var w = 1000;
       var h = 800;
       var linkDistance=150;
 
       var colors = d3.scale.category10();
-      var svg = d3.select("body").append("svg").attr({"width":w,"height":h});
+      var svg = d3.select("#network").append("svg").attr({"width":w,"height":h});
 
       d3.select("#start")
         .on("submit", function(d,i){
@@ -217,7 +287,7 @@ var retrieve = function(id, collection){
         .attr("class", "node")
         .attr({"r":10})
         .attr('fill', function(d, i) {
-          return colors(i);
+          return colors(d.topLevel);
         })
         .on("dblclick", function(d,i){
           console.log("test", d)
@@ -234,7 +304,8 @@ var retrieve = function(id, collection){
          .attr({"x":function(d){return d.x;},
                 "y":function(d){return d.y;},
                 "class":"nodelabel",
-                "stroke":"black"})
+                "stroke":"black",
+                "font-size": 10})
          .text(function(d){return d.name;});
 
       var edgepaths = svg.selectAll(".edgepath")
