@@ -30,6 +30,15 @@
 
 <script type="text/javascript">
 
+function getUrlVar() {
+    var result = {};
+    var location = window.location.href.split('#');
+    var parts = location[0].replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+        result [key] = value;
+    });
+    return result;
+}
+
 var dataset = {
   nodes: [
   ],
@@ -388,7 +397,15 @@ var retrieve = function(id, collection){
       });
     }
 
-    draw(dataset);
+    //draw(dataset);
+    console.log(getUrlVar()["resoureid"])
+    if (getUrlVar()["resourceid"]){
+      var result = getUrlVar();
+      retrieve(result["resourceid"], result["collection"])
+    }
+    else{
+      draw(dataset)
+    }
 </script>
 
 </body>
