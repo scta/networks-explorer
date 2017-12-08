@@ -299,12 +299,17 @@ var retrieve = function(id, collection){
           return colors(d.topLevel);
         })
         .on("dblclick", function(d,i){
-          console.log("test", d)
           force.stop();
+          if (d3.event.shiftKey) {
+            //location must be keyword that automatically reloads to value
+            location = "/?resourceid=" + d.name
+          }
           var id = d.name;
           retrieve(id, false);
         })
         .call(force.drag)
+
+
 
       var nodelabels = svg.selectAll(".nodelabel")
          .data(dataset.nodes)
