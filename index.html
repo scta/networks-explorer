@@ -302,7 +302,7 @@ var retrieve = function(id, collection){
           force.stop();
           if (d3.event.shiftKey) {
             //location must be keyword that automatically reloads to value
-            location = "/?resourceid=" + d.name
+            location = "?resourceid=" + d.name
           }
           var id = d.name;
           retrieve(id, false);
