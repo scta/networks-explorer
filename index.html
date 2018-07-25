@@ -49,7 +49,8 @@ var dataset = {
 
 var retrieve = function(id, collection){
   //const sparqlEndpoint = "http://localhost:3030/ds/query"
-  const sparqlEndpoint = "https://sparql-staging.scta.info/ds/query"
+  //const sparqlEndpoint = "https://sparql-staging.scta.info/ds/query"
+  const sparqlEndpoint = "https://sparql-docker.scta.info/ds/query"
 
   var collectionQuery = [
     "select ?target ?title ?topLevel ?topLevelTitle ",
