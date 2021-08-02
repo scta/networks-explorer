@@ -52,6 +52,19 @@ var retrieve = function(id, collection){
   //const sparqlEndpoint = "https://sparql-staging.scta.info/ds/query"
   const sparqlEndpoint = "https://sparql-docker.scta.info/ds/query"
 
+  const sourceUnion = (subjectQueryTerm="?target", objectQueryTerm="?source") => {
+      return [
+        "{",
+         subjectQueryTerm + " <http://scta.info/property/source> " +  objectQueryTerm + " .",
+        "FILTER (!isBlank(" + objectQueryTerm + ")) .",
+        "}",
+        "UNION",
+        "{",
+        subjectQueryTerm + " <http://scta.info/property/source> ?bn .",
+        "?bn <http://scta.info/property/source> " +  objectQueryTerm + " .",
+        "}"].join('');
+      }
+      
   var collectionQuery = [
     "select ?target ?title ?topLevel ?topLevelTitle ",
     "WHERE",
@@ -83,7 +96,8 @@ var retrieve = function(id, collection){
         "}",
         "UNION",
         "{",
-          "?target <http://scta.info/property/source> ?source .",
+          //"?target <http://scta.info/property/source> ?source .",
+          sourceUnion(),
           "?source <http://scta.info/property/isPartOfTopLevelExpression> ?topLevel .",
           "?topLevel <http://purl.org/dc/elements/1.1/title> ?topLevelTitle .",
         "}",
@@ -121,7 +135,8 @@ var retrieve = function(id, collection){
         "}",
         "UNION",
         "{",
-          "?target <http://scta.info/property/source> ?source .",
+          //"?target <http://scta.info/property/source> ?source .",
+          sourceUnion(),
           "?source <http://scta.info/property/isPartOfTopLevelExpression> ?topLevel .",
           "?topLevel <http://purl.org/dc/elements/1.1/title> ?topLevelTitle .",
         "}",

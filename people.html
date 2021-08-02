@@ -51,118 +51,31 @@ var retrieve = function(id, collection){
   //const sparqlEndpoint = "http://localhost:3030/ds/query"
   //const sparqlEndpoint = "https://sparql-staging.scta.info/ds/query"
   const sparqlEndpoint = "https://sparql-docker.scta.info/ds/query"
-
-  const sourceUnion = (subjectQueryTerm="?target", objectQueryTerm="?source") => {
-      return [
-        "{",
-         subjectQueryTerm + " <http://scta.info/property/source> " +  objectQueryTerm + " .",
-        "FILTER (!isBlank(" + objectQueryTerm + ")) .",
-        "}",
-        "UNION",
-        "{",
-        subjectQueryTerm + " <http://scta.info/property/source> ?bn .",
-        "?bn <http://scta.info/property/source> " +  objectQueryTerm + " .",
-        "}"].join('');
-      }
-  var collectionQuery = [
-    "select ?target ?title ?topLevel ?topLevelTitle ",
-    "WHERE",
-    "{",
-    "?item <http://scta.info/property/isMemberOf> <" + id + "> .",
-      "{",
-        "?item <http://scta.info/property/quotes> ?target .",
-      "}",
-      "UNION",
-      "{",
-        "?item <http://scta.info/property/quotedBy> ?target .",
-      "}",
-      "UNION",
-      "{",
-        "?item <http://scta.info/property/references> ?target .",
-      "}",
-        "UNION",
-      "{",
-        "?item <http://scta.info/property/referencedBy> ?target .",
-      "}",
-          "UNION",
-      "{",
-        "?item <http://scta.info/property/isRelatedTo> ?target .",
-      "}",
-      "?target <http://purl.org/dc/elements/1.1/title> ?title .",
-        "{",
-          "?target <http://scta.info/property/isPartOfTopLevelExpression> ?topLevel .",
-          "?topLevel <http://purl.org/dc/elements/1.1/title> ?topLevelTitle .",
-        "}",
-        "UNION",
-        "{",
-          //"?target <http://scta.info/property/source> ?source .",
-          sourceUnion(),
-          "?source <http://scta.info/property/isPartOfTopLevelExpression> ?topLevel .",
-          "?topLevel <http://purl.org/dc/elements/1.1/title> ?topLevelTitle .",
-        "}",
-    "}",
-    "LIMIT 50"].join('');
-
-
   var itemQuery = [
-    "select ?target ?title ?topLevel ?topLevelTitle ",
+    "SELECT DISTINCT ?target ?title ?topLevel ?topLevelTitle ?source ?sourceTitle ?instance ",
     "WHERE",
     "{",
-      "{",
-        "<" + id + "> <http://scta.info/property/quotes> ?target .",
-      "}",
-      "UNION",
-      "{",
-        "<" + id + "> <http://scta.info/property/quotedBy> ?target .",
-      "}",
-      "UNION",
-      "{",
-        "<" + id + "> <http://scta.info/property/references> ?target .",
-      "}",
-        "UNION",
-      "{",
-        "<" + id + "> <http://scta.info/property/referencedBy> ?target .",
-      "}",
-          "UNION",
-      "{",
-        "<" + id + "> <http://scta.info/property/isRelatedTo> ?target .",
-      "}",
+      "?target a <http://scta.info/resource/person> .",
+      "?target <http://scta.info/property/personType>	<http://scta.info/resource/scholastic> .",
       "?target <http://purl.org/dc/elements/1.1/title> ?title .",
-        "{",
-          "?target <http://scta.info/property/isPartOfTopLevelExpression> ?topLevel .",
-          "?topLevel <http://purl.org/dc/elements/1.1/title> ?topLevelTitle .",
-        "}",
-        "UNION",
-        "{",
-          //"?target <http://scta.info/property/source> ?source .",
-          sourceUnion(),
-          "?source <http://scta.info/property/isPartOfTopLevelExpression> ?topLevel .",
-          "?topLevel <http://purl.org/dc/elements/1.1/title> ?topLevelTitle .",
-        "}",
-    "}"].join('');
-    var query = collection ? collectionQuery : query = itemQuery;
+      "?instance <http://scta.info/property/structureElementType>	<http://scta.info/resource/structureElementName> .",
+      "?instance <http://scta.info/property/isInstanceOf>	?target .",
+      "?instance <http://scta.info/property/isPartOfTopLevelExpression> ?topLevel .",
+      "?topLevel <http://purl.org/dc/elements/1.1/title> ?topLevelTitle .",
+      "?topLevel <http://www.loc.gov/loc.terms/relators/AUT> ?source .",
+      "?source <http://purl.org/dc/elements/1.1/title> ?sourceTitle .",
+      "?source <http://scta.info/property/personType>	<http://scta.info/resource/scholastic> .",
+      "}",
+      "LIMIT 5000"
+    ].join('');
+    var query = itemQuery;
 
-    // $.get(sparqlEndpoint, {query: query}, function(data){
-    //   var results = data.results.bindings;
-    //   console.log(results);
-    //   addNode(id, results);
-    // });
-    var expressionid = id.split("/resource/")[1];
-    $.get("https://metallo.scta.info/view/" + expressionid + "/100/json", {query: query}, function(data){
-      var results = data.items.map((item) => {
-        return {
-          target: {value: "http://scta.info/resource/" + item.id},
-          title: {value: item.id},
-          distance: {value: item.distance},
-          topLevel: {value: "test"},
-          topLevelTitle: {value: "test"}
-        }
-      });
+    $.get(sparqlEndpoint, {query: query}, function(data){
+      var results = data.results.bindings;
       console.log(results);
-      addNode(id, results);
+      //addNode(id, results);
+      addNode(results);
     });
-
-
   }
   //var id = "http://scta.info/resource/pgb1q8-d1e747"
   //retrieve(id);
@@ -174,27 +87,32 @@ var retrieve = function(id, collection){
       console.log("dataset", dataset);
     }
 
-    var addNode = function(source, nodes){
-      console.log("nodes first check", nodes);
-      if (!checkIfNodeAlreadyExists(dataset.nodes, source)){
-        dataset.nodes.push(
-          {
-            name: source,
-            title: "start",
-            topLevel: "start",
-            topLevelTitle: "start",
-            distance: null
-        });
-      }
+    var addNode = function(nodes){
+      // if (!checkIfNodeAlreadyExists(dataset.nodes, source)){
+      //   dataset.nodes.push(
+      //     {
+      //       name: source,
+      //       title: "start",
+      //       topLevel: "start",
+      //       topLevelTitle: "start"
+      //   });
+      // }
+      console.log("nodes new", nodes)
       for (i = 0; i < nodes.length; i++) {
         if (!checkIfNodeAlreadyExists(dataset.nodes, nodes[i].target.value)){
           dataset.nodes.push(
             {name: nodes[i].target.value,
               title: nodes[i].title.value,
               topLevel: nodes[i].topLevel.value,
-              topLevelTitle: nodes[i].topLevelTitle.value,
-              distance: nodes[i].distance.value
-
+              topLevelTitle: nodes[i].topLevelTitle.value
+            });
+        }
+        if (!checkIfNodeAlreadyExists(dataset.nodes, nodes[i].source.value)){
+          dataset.nodes.push(
+            {name: nodes[i].source.value,
+              title: nodes[i].sourceTitle.value,
+              topLevel: nodes[i].topLevel.value,
+              topLevelTitle: nodes[i].topLevelTitle.value
             });
         }
       }
@@ -202,13 +120,50 @@ var retrieve = function(id, collection){
 
       console.log("nodes", dataset.nodes);
 
-      sourceIndex =  findWithAttr(dataset.nodes, "name", source)
-      for (i = 0; i < nodes.length; i++) {
-        var targetIndex = findWithAttr(dataset.nodes, "name", nodes[i].target.value)
-        if (!checkIfEdgeAlreadyExists(dataset.edges, sourceIndex, targetIndex)){
-          addEdge(sourceIndex, targetIndex);
-        }
+      for (i = 0; i < dataset.nodes.length; i++) { 
+        let sourceIndex = i
+        let targets = []
+        nodes.forEach((n) => {
+          if (n.source.value === dataset.nodes[i].name){
+            targets.push(n.target.value);
+          }
+        })
+        
+        targets.forEach((t) => {
+          dataset.nodes.forEach((d, i) => {
+            if (d.name == t){
+              if (!checkIfEdgeAlreadyExists(dataset.edges, sourceIndex, i)){
+              addEdge(sourceIndex, i);
+              //targetIndices.push(i)
+              }
+            }
+          })
+        })
       }
+      console.log('new data set', dataset.nodes)
+        
+      
+          
+
+      // for (i = 0; i < nodes.length; i++) { 
+      //   sourceIndex = i;
+      //   for (i = 0; i < nodes.length; i++) {
+      //     var targetIndex = findWithAttr(dataset.nodes, "name", nodes[i].target.value)
+      //     if (!checkIfEdgeAlreadyExists(dataset.edges, sourceIndex, targetIndex)){
+
+      //       addEdge(sourceIndex, targetIndex);
+      //     }
+      //   }
+      // }
+      // for (i = 0; i < nodes.length; i++) { 
+      //   targetIndex = i;
+      //   for (i = 0; i < nodes.length; i++) {
+      //     var sourceIndex = findWithAttr(dataset.nodes, "name", nodes[i].source.value)
+      //     if (!checkIfEdgeAlreadyExists(dataset.edges, targetIndex, sourceIndex)){
+      //       addEdge(targetIndex, sourceIndex);
+      //     }
+      //   }
+      // }
       console.log(dataset.edges)
       d3.select("#list").select("svg").remove();
       d3.select("#network").select("svg").remove();
@@ -282,8 +237,8 @@ var retrieve = function(id, collection){
 
     var draw = function(dataset){
       var w = 1000;
-      var h = 800;
-      var linkDistance=150;
+      var h = 1000;
+      var linkDistance=50;
 
       var colors = d3.scale.category10();
       var svg = d3.select("#network").append("svg").attr({"width":w,"height":h});
@@ -307,45 +262,19 @@ var retrieve = function(id, collection){
           .links(dataset.edges)
           .size([w,h])
           .linkDistance([linkDistance])
-          .charge([-500])
-          .theta(0.1)
-          .gravity(.05)
+          .charge([-1000])
+          .theta(0.5)
+          .gravity(.1)
           .start();
 
-      function scaleNumber(number, tmin, tmax){
-        //scale adjustment taken from here
-        //https://stats.stackexchange.com/questions/281162/scale-a-number-between-a-range
-        // places the number within the max and min of distanceValues and rescales that within the range of tmin and tmax
-        let distanceValues = dataset.nodes.map((d)=> {
-          if (d.distance != null){
-            return parseFloat(d.distance)
-          }
-        })
-        distanceValues = cleanArray(distanceValues);
-        const max = Math.max(...distanceValues);
-        const min = Math.min(...distanceValues);
-        const newnumber = ((number - min) / (max - min))*((tmax-tmin) + tmin)
-        return newnumber
 
-      }
-      function cleanArray(actual) {
-        //https://stackoverflow.com/questions/281264/remove-empty-elements-from-an-array-in-javascript
-        var newArray = new Array();
-        for (var i = 0; i < actual.length; i++) {
-          if (actual[i]) {
-            newArray.push(actual[i]);
-          }
-        }
-        return newArray;
-      }
 
       var edges = svg.selectAll("line")
         .data(dataset.edges)
         .enter()
         .append("line")
         .attr("id",function(d,i) {return 'edge'+i})
-        //.attr('marker-end','url(#arrowhead)')
-        .attr("style", function(d) { console.log("d", (5.5 - scaleNumber(d.target.distance, 0, 5))); return ("stroke-width:" + (5.5 - scaleNumber(d.target.distance, 0, 5)) + "px;" );})
+        .attr('marker-end','url(#arrowhead)')
         .style("stroke","#ccc")
         .style("pointer-events", "none");
 
@@ -465,10 +394,9 @@ var retrieve = function(id, collection){
     }
 
     //draw(dataset);
-    console.log(getUrlVar()["resoureid"])
-    if (getUrlVar()["resourceid"]){
-      var result = getUrlVar();
-      retrieve(result["resourceid"], result["collection"])
+    
+    if (true){
+      retrieve()
     }
     else{
       draw(dataset)
